@@ -11,7 +11,6 @@ export default function Referrals({ userRole }) {
       if (!userRole || !auth.currentUser) return;
       
       try {
-        // Dynamic query: Students see what they sent, Alumni see what they received
         const field = userRole === 'student' ? 'studentId' : 'alumniId';
         const q = query(collection(db, 'referrals'), where(field, '==', auth.currentUser.uid));
         
@@ -60,42 +59,31 @@ export default function Referrals({ userRole }) {
                   <span className="opacity-60 text-xs">Timestamp: {req.timestamp?.toDate().toLocaleDateString() || 'Recent'}</span>
                 </div>
                 
-               <div className="flex items-center gap-4">
-  <span className={`uppercase tracking-widest text-xs font-bold 
-    ${req.status === 'Offered' ? 'text-green-400' : req.status === 'Accepted' ? 'text-green-600' : req.status.includes('Rejected') ? 'text-red-500' : req.status === 'Interviewing' ? 'text-yellow-400' : 'text-yellow-600'}`}>
-    {req.status}
-  </span>
-  
-  {/* Alumni Controls: Initial Approval */}
-  {userRole === 'alumni' && req.status === 'Pending' && (
-    <div className="flex gap-2">
-      <button onClick={() => updateStatus(req.id, 'Accepted')} className="px-3 py-1 bg-green-900/30 text-green-500 hover:bg-green-900/60 border border-green-500/30 transition-colors uppercase tracking-widest text-xs">Accept</button>
-      <button onClick={() => updateStatus(req.id, 'Rejected by Alumnus')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Reject</button>
-    </div>
-  )}
-
-  {/* Student Controls: Pipeline Tracking */}
-  {userRole === 'student' && req.status === 'Accepted' && (
-    <div className="flex gap-2 border-l border-copper/20 pl-4">
-      <button onClick={() => updateStatus(req.id, 'Interviewing')} className="px-3 py-1 bg-yellow-900/30 text-yellow-500 hover:bg-yellow-900/60 border border-yellow-500/30 transition-colors uppercase tracking-widest text-xs">Interviewing</button>
-      <button onClick={() => updateStatus(req.id, 'Offered')} className="px-3 py-1 bg-green-900/30 text-green-400 hover:bg-green-900/60 border border-green-400/30 transition-colors uppercase tracking-widest text-xs">Got Offer</button>
-      <button onClick={() => updateStatus(req.id, 'Rejected by Company')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Rejected</button>
-    </div>
-  )}
-  
-  {/* Student Controls: Final Update from Interviewing */}
-  {userRole === 'student' && req.status === 'Interviewing' && (
-    <div className="flex gap-2 border-l border-copper/20 pl-4">
-      <button onClick={() => updateStatus(req.id, 'Offered')} className="px-3 py-1 bg-green-900/30 text-green-400 hover:bg-green-900/60 border border-green-400/30 transition-colors uppercase tracking-widest text-xs">Got Offer</button>
-      <button onClick={() => updateStatus(req.id, 'Rejected by Company')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Rejected</button>
-    </div>
-  )}
-</div>
+                <div className="flex items-center gap-4">
+                  <span className={`uppercase tracking-widest text-xs font-bold 
+                    ${req.status === 'Offered' ? 'text-green-400' : req.status === 'Accepted' ? 'text-green-600' : req.status.includes('Rejected') ? 'text-red-500' : req.status === 'Interviewing' ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                    {req.status}
+                  </span>
                   
                   {userRole === 'alumni' && req.status === 'Pending' && (
                     <div className="flex gap-2">
                       <button onClick={() => updateStatus(req.id, 'Accepted')} className="px-3 py-1 bg-green-900/30 text-green-500 hover:bg-green-900/60 border border-green-500/30 transition-colors uppercase tracking-widest text-xs">Accept</button>
-                      <button onClick={() => updateStatus(req.id, 'Rejected')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Reject</button>
+                      <button onClick={() => updateStatus(req.id, 'Rejected by Alumnus')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Reject</button>
+                    </div>
+                  )}
+
+                  {userRole === 'student' && req.status === 'Accepted' && (
+                    <div className="flex gap-2 border-l border-copper/20 pl-4">
+                      <button onClick={() => updateStatus(req.id, 'Interviewing')} className="px-3 py-1 bg-yellow-900/30 text-yellow-500 hover:bg-yellow-900/60 border border-yellow-500/30 transition-colors uppercase tracking-widest text-xs">Interviewing</button>
+                      <button onClick={() => updateStatus(req.id, 'Offered')} className="px-3 py-1 bg-green-900/30 text-green-400 hover:bg-green-900/60 border border-green-400/30 transition-colors uppercase tracking-widest text-xs">Got Offer</button>
+                      <button onClick={() => updateStatus(req.id, 'Rejected by Company')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Rejected</button>
+                    </div>
+                  )}
+                  
+                  {userRole === 'student' && req.status === 'Interviewing' && (
+                    <div className="flex gap-2 border-l border-copper/20 pl-4">
+                      <button onClick={() => updateStatus(req.id, 'Offered')} className="px-3 py-1 bg-green-900/30 text-green-400 hover:bg-green-900/60 border border-green-400/30 transition-colors uppercase tracking-widest text-xs">Got Offer</button>
+                      <button onClick={() => updateStatus(req.id, 'Rejected by Company')} className="px-3 py-1 bg-red-900/30 text-red-500 hover:bg-red-900/60 border border-red-500/30 transition-colors uppercase tracking-widest text-xs">Rejected</button>
                     </div>
                   )}
                 </div>

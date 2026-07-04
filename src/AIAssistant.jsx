@@ -56,57 +56,51 @@ export default function AIAssistant() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '700px', margin: '20px auto', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fff' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>AI Career Assistant</h2>
-        <div>
-          <button onClick={() => setMode('resume')} style={toggleStyle(mode === 'resume')}>Resume Optimizer</button>
-          <button onClick={() => setMode('referral')} style={toggleStyle(mode === 'referral')}>Referral Writer</button>
+  <div className="max-w-4xl mx-auto mt-8">
+    
+    {/* Themed Card Container */}
+    <div className="bg-panel border border-copper/20 p-8 shadow-2xl">
+      
+      {/* Header and Tabs */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-copper/20 pb-6 gap-4">
+        <h2 className="text-3xl font-serif text-copperLight">AI Career Assistant</h2>
+        
+        <div className="flex gap-2 font-mono text-xs">
+          <button className="px-4 py-2 uppercase tracking-widest transition-colors bg-copper text-base font-bold">
+            Resume Optimizer
+          </button>
+          <button className="px-4 py-2 uppercase tracking-widest transition-colors bg-base text-copper border border-copper/30 hover:bg-copper/10">
+            Referral Writer
+          </button>
         </div>
       </div>
-      
-      {/* MODE 1: RESUME OPTIMIZER */}
-      {mode === 'resume' && (
-        <form onSubmit={handleScore} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <textarea placeholder="Paste Resume here..." value={resume} onChange={(e) => setResume(e.target.value)} rows="4" required style={{ padding: '10px' }} />
-          <textarea placeholder="Paste Job Description here..." value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} rows="4" required style={{ padding: '10px' }} />
-          <button type="submit" disabled={loading} style={btnStyle}>{loading ? 'Analyzing...' : 'Analyze Fit & Gaps'}</button>
-          
-          {resumeResult && (
-            <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
-              <h3 style={{ color: resumeResult.score > 70 ? '#28a745' : '#dc3545' }}>ATS Score: {resumeResult.score}/100</h3>
-              
-              <h4>Skill Gaps Identified:</h4>
-              <ul>{resumeResult.skillGaps?.map((gap, i) => <li key={i}>{gap}</li>)}</ul>
-              
-              <h4>Missing ATS Keywords:</h4>
-              <ul>{resumeResult.keywordsToAdd?.map((kw, i) => <li key={i}>{kw}</li>)}</ul>
-              
-              <h4>Actionable Suggestions:</h4>
-              <ul>{resumeResult.suggestions?.map((tip, i) => <li key={i}>{tip}</li>)}</ul>
-            </div>
-          )}
-        </form>
-      )}
 
-      {/* MODE 2: REFERRAL WRITER */}
-      {mode === 'referral' && (
-        <form onSubmit={handleReferral} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input type="text" placeholder="Target Company (e.g., Google)" value={targetCompany} onChange={(e) => setTargetCompany(e.target.value)} required style={{ padding: '10px' }} />
-          <input type="text" placeholder="Target Role (e.g., SDE Intern)" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} required style={{ padding: '10px' }} />
-          <textarea placeholder="Your Background (e.g., ECE student at NIT Jamshedpur, know C++ and Python)" value={myBackground} onChange={(e) => setMyBackground(e.target.value)} rows="3" required style={{ padding: '10px' }} />
-          <button type="submit" disabled={loading} style={btnStyle}>{loading ? 'Writing...' : 'Generate Message'}</button>
-          
-          {referralResult && (
-            <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e9ecef', borderRadius: '5px' }}>
-              <h4>Generated Message:</h4>
-              <p style={{ whiteSpace: 'pre-wrap' }}>{referralResult}</p>
-            </div>
-          )}
-        </form>
-      )}
+      {/* Inputs */}
+      <div className="space-y-6">
+        <textarea
+          className="w-full h-32 bg-base border border-copper/30 p-4 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors resize-none font-sans"
+          placeholder="Paste Resume here..."
+          // Ensure your value and onChange props remain here
+        ></textarea>
+
+        <textarea
+          className="w-full h-32 bg-base border border-copper/30 p-4 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors resize-none font-sans"
+          placeholder="Paste Job Description here..."
+          // Ensure your value and onChange props remain here
+        ></textarea>
+
+        {/* Themed Submit Button */}
+        <button 
+          // Ensure your onClick handler remains here
+          className="w-full py-4 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors mt-4"
+        >
+          Analyze Fit & Gaps
+        </button>
+      </div>
+
     </div>
-  );
+  </div>
+);
 }
 
 const toggleStyle = (isActive) => ({

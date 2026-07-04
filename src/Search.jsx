@@ -1,123 +1,108 @@
 import { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function Search() {
-  const [alumni, setAlumni] = useState([]);
-  const [filteredAlumni, setFilteredAlumni] = useState([]);
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchFilter, setSearchFilter] = useState('skills'); // skills, company, jobRole, department
+  const [loading, setLoading] = useState(true);
 
-  // 1. Fetch all active alumni profiles
   useEffect(() => {
-    const fetchAlumni = async () => {
-      const q = query(collection(db, 'users'), where('role', '==', 'alumni'));
-      const snapshot = await getDocs(q);
-      const list = [];
-      snapshot.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() });
-      });
-      setAlumni(list);
-      setFilteredAlumni(list);
+    const fetchUsers = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const fetchedUsers = [];
+        querySnapshot.forEach((doc) => {
+          fetchedUsers.push({ id: doc.id, ...doc.data() });
+        });
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Error fetching network:", error);
+      }
+      setLoading(false);
     };
-    fetchAlumni();
+    fetchUsers();
   }, []);
 
-  // 2. The Ranking and Filtering Engine
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
+  const filteredUsers = users.filter(user => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (user.fullName && user.fullName.toLowerCase().includes(term)) ||
+      (user.company && user.company.toLowerCase().includes(term)) ||
+      (user.role && user.role.toLowerCase().includes(term)) ||
+      (user.branch && user.branch.toLowerCase().includes(term))
+    );
+  });
 
-    if (!term) {
-      setFilteredAlumni(alumni);
-      return;
-    }
-
-    const scored = alumni
-      .map(person => {
-        let weight = 0;
-
-        // Skill similarity scoring
-        const skillMatches = person.skills?.filter(s => s.toLowerCase().includes(term)) || [];
-        weight += skillMatches.length * 20;
-
-        // Company/Role exact match scoring
-        if (person.company?.toLowerCase().includes(term)) weight += 30;
-        if (person.jobRole?.toLowerCase().includes(term)) weight += 30;
-        if (person.department?.toLowerCase().includes(term)) weight += 15;
-
-        // Merit-based criteria from specification
-        const successRate = person.referralSuccessRate || 0.85; // Default fallback metric
-        weight += successRate * 50;
-
-        return { ...person, searchScore: weight };
-      })
-      // Filter out people with zero query relationship
-      .filter(person => {
-        if (searchFilter === 'skills') return person.skills?.some(s => s.toLowerCase().includes(term));
-        return person[searchFilter]?.toLowerCase().includes(term);
-      })
-      // Sort descending by highest calculated match score
-      .sort((a, b) => b.searchScore - a.searchScore);
-
-    setFilteredAlumni(scored);
-  };
+  if (loading) return (
+    <div className="flex justify-center items-center h-64 text-copper font-mono text-sm uppercase tracking-widest">
+      Indexing Directory...
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '700px', margin: '0 auto' }}>
-      <h2>Alumni Directory</h2>
+    <div className="max-w-6xl mx-auto font-sans text-copper mt-8">
       
-      {/* Search Bar Matrix */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <select 
-          value={searchFilter} 
-          onChange={(e) => setSearchFilter(e.target.value)}
-          style={{ padding: '10px', borderRadius: '4px' }}
-        >
-          <option value="skills">Skills</option>
-          <option value="company">Company</option>
-          <option value="jobRole">Role</option>
-          <option value="department">Department</option>
-        </select>
-        
+      <div className="mb-10 border-b border-copper/20 pb-6">
+        <h2 className="text-4xl font-serif text-copperLight">Network Matrix</h2>
+        <p className="font-mono text-xs uppercase tracking-widest opacity-60 mt-2">Query the alumni and student directory</p>
+      </div>
+
+      {/* Search Input Console */}
+      <div className="mb-10">
         <input 
           type="text" 
-          placeholder={`Search alumni by ${searchFilter}...`} 
-          value={searchTerm} 
-          onChange={handleSearch}
-          style={{ flexGrow: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+          placeholder="Query by name, company, role, or branch..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-panel border border-copper/30 p-5 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors font-mono text-sm shadow-xl"
         />
       </div>
 
-      {/* Results Display */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {filteredAlumni.map(person => (
-          <div key={person.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', position: 'relative' }}>
-            <h3 style={{ margin: '0 0 5px 0' }}>{person.jobRole || 'Alumni'}</h3>
-            <p style={{ margin: '0 0 10px 0', color: '#555' }}><strong>{person.company || 'Unspecified Company'}</strong> — {person.department}</p>
+      {/* Directory Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredUsers.map(user => (
+          <div key={user.id} className="bg-panel border border-copper/20 p-6 shadow-lg flex flex-col justify-between hover:border-copper/40 transition-colors">
             
-            <div style={{ marginBottom: '10px' }}>
-              {person.skills?.map((skill, idx) => (
-                <span key={idx} style={{ display: 'inline-block', backgroundColor: '#e0e0e0', color: '#333', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85em', marginRight: '5px' }}>
-                  {skill}
+            <div>
+              <div className="flex justify-between items-start mb-4 border-b border-copper/10 pb-4">
+                <h3 className="text-2xl font-serif text-copperLight truncate pr-4">
+                  {user.fullName || 'Unknown Node'}
+                </h3>
+                <span className="bg-base border border-copper/30 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-copperLight">
+                  {user.role === 'alumni' ? 'ALUMNI' : 'STUDENT'}
                 </span>
-              ))}
+              </div>
+              
+              <div className="font-mono text-xs opacity-80 uppercase tracking-widest mb-6 space-y-2">
+                <p><span className="opacity-50">ORG:</span> {user.company || 'UNASSIGNED'}</p>
+                <p><span className="opacity-50">POS:</span> {user.role || 'UNASSIGNED'}</p>
+                <p><span className="opacity-50">DIV:</span> {user.branch || 'UNKNOWN'} {user.batchYear ? `[${user.batchYear}]` : ''}</p>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', fontSize: '0.85em', color: '#666', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-              <span>Batch: {person.gradBatch || person.gradYear}</span>
-              <span>Email: {person.email}</span>
+            <div className="pt-2">
+              {user.linkedin ? (
+                <a href={user.linkedin} target="_blank" rel="noreferrer" className="block w-full text-center bg-base text-copper border border-copper/30 py-3 font-mono text-xs uppercase tracking-widest hover:bg-copper/10 transition-colors">
+                  Establish Link
+                </a>
+              ) : (
+                <button disabled className="w-full text-center bg-base/30 text-copper/30 border border-copper/10 py-3 font-mono text-xs uppercase tracking-widest cursor-not-allowed">
+                  No Link Provided
+                </button>
+              )}
             </div>
 
-            {searchTerm && (
-              <span style={{ position: 'absolute', top: '15px', right: '15px', fontSize: '0.8em', backgroundColor: '#d4edda', color: '#155724', padding: '3px 8px', borderRadius: '12px' }}>
-                Match: {Math.round(person.searchScore)}
-              </span>
-            )}
           </div>
         ))}
-        {filteredAlumni.length === 0 && <p>No matching alumni discovered.</p>}
+
+        {filteredUsers.length === 0 && (
+          <div className="col-span-full text-center py-16 text-copper border border-dashed border-copper/30 font-mono text-sm uppercase tracking-widest opacity-60">
+            No matching nodes found in the matrix.
+          </div>
+        )}
       </div>
+
     </div>
   );
 }

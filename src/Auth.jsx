@@ -1,78 +1,102 @@
 import { useState } from 'react';
 import { auth, db } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { motion } from 'framer-motion';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [gradYear, setGradYear] = useState('');
-
-  const isCollegeEmail = (email) => {
-    return email.endsWith('@college.edu') || email.endsWith('.ac.in'); 
-  };
+  const [role, setRole] = useState('student');
+  const [error, setError] = useState('');
 
   const handleAuth = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
+    setError('');
     try {
       if (isLogin) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        if (!userCredential.user.emailVerified) {
-          alert("Please check your spam/inbox and verify your email before logging in.");
-          return;
-        }
-        alert("Logged in successfully.");
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        if (!isCollegeEmail(email)) {
-          alert("You must use an official college email ID.");
-          return;
-        }
-
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        await sendEmailVerification(user);
-        
-        const currentYear = new Date().getFullYear();
-        const userRole = parseInt(gradYear) > currentYear ? 'student' : 'alumni';
-
-        // Save only the essentials
-        await setDoc(doc(db, 'users', user.uid), {
-          email: user.email,
-          role: userRole,
-          gradYear: parseInt(gradYear),
-          points: 0,
-          profileCompleted: false
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          email,
+          role,
+          createdAt: new Date()
         });
-
-        alert(`Account created! Check spam/inbox for verification link.`);
       }
-    } catch (error) {
-      alert("Error: " + error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '400px', margin: '50px auto', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>{isLogin ? 'Log In' : 'Register'}</h2>
-      
-      <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <input type="email" placeholder="College Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        
-        {!isLogin && (
-          <input type="number" placeholder="Graduation Year" value={gradYear} onChange={(e) => setGradYear(e.target.value)} required />
-        )}
+    <div className="min-h-screen bg-base text-copper flex items-center justify-center p-6 selection:bg-copper selection:text-base">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-lg bg-panel border border-copper/20 p-10 md:p-14 shadow-2xl"
+      >
+        <div className="mb-10 text-center">
+          <h2 className="text-4xl font-serif text-copperLight mb-2">{isLogin ? 'Access Portal' : 'Establish Identity'}</h2>
+          <p className="font-mono text-xs uppercase tracking-widest opacity-60">
+            {isLogin ? 'Enter your credentials' : 'Register a new node'}
+          </p>
+        </div>
 
-        <button type="submit" style={{ padding: '10px', cursor: 'pointer' }}>
-          {isLogin ? 'Log In' : 'Sign Up'}
-        </button>
-      </form>
+        {error && <div className="mb-6 p-4 border border-red-900 bg-red-950 text-red-400 text-sm font-mono">{error}</div>}
 
-      <button onClick={() => setIsLogin(!isLogin)} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#646cff', cursor: 'pointer' }}>
-        {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
-      </button>
+        <form onSubmit={handleAuth} className="space-y-6 text-lg">
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Email Address</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+              className="w-full bg-base border border-copper/30 p-4 text-copper outline-none focus:border-copper transition-colors"
+            />
+          </div>
+          
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Password</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              className="w-full bg-base border border-copper/30 p-4 text-copper outline-none focus:border-copper transition-colors"
+            />
+          </div>
+
+          {!isLogin && (
+            <div>
+              <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Clearance Level</label>
+              <select 
+                value={role} 
+                onChange={(e) => setRole(e.target.value)} 
+                className="w-full bg-base border border-copper/30 p-4 text-copper outline-none focus:border-copper appearance-none cursor-pointer"
+              >
+                <option value="student">Student</option>
+                <option value="alumni">Alumni</option>
+              </select>
+            </div>
+          )}
+
+          <button type="submit" className="w-full py-4 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors mt-4">
+            {isLogin ? 'Initialize Session' : 'Register'}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center border-t border-copper/10 pt-6">
+          <button 
+            onClick={() => setIsLogin(!isLogin)} 
+            className="text-sm font-mono opacity-70 hover:opacity-100 transition-opacity"
+          >
+            {isLogin ? 'Request access (Register)' : 'Return to login'}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

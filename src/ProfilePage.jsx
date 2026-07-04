@@ -1,97 +1,110 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-export default function Profile() {
-  const [userData, setUserData] = useState(null);
+export default function ProfilePage() {
+  const [profile, setProfile] = useState({
+    fullName: '',
+    batchYear: '',
+    branch: '',
+    company: '',
+    role: '',
+    linkedin: '',
+    bio: ''
+  });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Form fields
-  const [department, setDepartment] = useState('');
-  const [skills, setSkills] = useState('');
-  const [company, setCompany] = useState('');
-  const [jobRole, setJobRole] = useState('');
-  const [industry, setIndustry] = useState('');
-
-  // READ: Fetch existing data when the page loads
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!auth.currentUser) return;
-      const docRef = doc(db, 'users', auth.currentUser.uid);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setUserData(data);
-        setDepartment(data.department || '');
-        setSkills(data.skills?.join(', ') || '');
-        setCompany(data.company || '');
-        setJobRole(data.jobRole || '');
-        setIndustry(data.industry || '');
+      if (auth.currentUser) {
+        const docRef = doc(db, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setProfile(prev => ({ ...prev, ...docSnap.data() }));
+        }
       }
       setLoading(false);
     };
     fetchProfile();
   }, []);
 
-  // WRITE: Push updates to Firestore
-  const handleSave = async (e) => {
-    e.preventDefault();
-    const docRef = doc(db, 'users', auth.currentUser.uid);
-    
-    // Base updates for everyone
-    const updates = {
-      department,
-      skills: skills.split(',').map(s => s.trim()), // Convert string to array
-      profileCompleted: true
-    };
-    
-    // Add specific data if they are an alumni
-    if (userData.role === 'alumni') {
-      updates.company = company;
-      updates.jobRole = jobRole;
-      updates.industry = industry;
-    }
-
-    await updateDoc(docRef, updates);
-    alert('Profile saved successfully.');
+  const handleChange = (e) => {
+    setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  if (loading) return <p style={{ textAlign: 'center' }}>Loading profile...</p>;
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), profile, { merge: true });
+      // Minor visual feedback instead of an ugly default alert
+      console.log('Identity updated.'); 
+    } catch (error) {
+      console.error(error);
+    }
+    setSaving(false);
+  };
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64 text-copper font-mono text-sm uppercase tracking-widest">
+      Loading Identity...
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
-      <h2>Complete Your Profile</h2>
-      <p>Role: <strong style={{ textTransform: 'capitalize' }}>{userData?.role}</strong></p>
+    <div className="max-w-4xl mx-auto font-sans text-copper mt-8">
       
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <input 
-            type="text" 
-            placeholder="Department (e.g., ECE)" 
-            value={department} 
-            onChange={(e) => setDepartment(e.target.value)} 
-            required 
-            style={{ padding: '8px' }} 
-        />
-        <input 
-            type="text" 
-            placeholder="Skills (comma separated, e.g., C++, Python, Data Structures)" 
-            value={skills} 
-            onChange={(e) => setSkills(e.target.value)} 
-            required 
-            style={{ padding: '8px' }} 
-        />
+      <div className="mb-10 border-b border-copper/20 pb-6">
+        <h2 className="text-4xl font-serif text-copperLight">Node Identity</h2>
+        <p className="font-mono text-xs uppercase tracking-widest opacity-60 mt-2">Manage your institutional profile</p>
+      </div>
+
+      <form onSubmit={handleSave} className="bg-panel border border-copper/20 p-8 shadow-2xl">
+        <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 border-b border-copper/10 pb-2">Core Data</h3>
         
-        {userData?.role === 'alumni' && (
-          <>
-            <input type="text" placeholder="Company Name" value={company} onChange={(e) => setCompany(e.target.value)} required style={{ padding: '8px' }} />
-            <input type="text" placeholder="Job Role" value={jobRole} onChange={(e) => setJobRole(e.target.value)} required style={{ padding: '8px' }} />
-            <input type="text" placeholder="Industry" value={industry} onChange={(e) => setIndustry(e.target.value)} required style={{ padding: '8px' }} />
-          </>
-        )}
-        
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#333', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Save Profile
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Full Name</label>
+            <input type="text" name="fullName" value={profile.fullName || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Batch Year</label>
+            <input type="text" name="batchYear" value={profile.batchYear || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Branch / Department</label>
+            <input type="text" name="branch" value={profile.branch || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">LinkedIn URL</label>
+            <input type="url" name="linkedin" value={profile.linkedin || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+        </div>
+
+        <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 mt-10 border-b border-copper/10 pb-2">Professional Status</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Current Company</label>
+            <input type="text" name="company" value={profile.company || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+          <div>
+            <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Job Role</label>
+            <input type="text" name="role" value={profile.role || ''} onChange={handleChange} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors"/>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Bio</label>
+          <textarea name="bio" value={profile.bio || ''} onChange={handleChange} rows="4" className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors resize-none font-sans"></textarea>
+        </div>
+
+        <button type="submit" disabled={saving} className="px-8 py-3 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors disabled:opacity-50">
+          {saving ? 'Updating...' : 'Save Identity'}
         </button>
       </form>
     </div>

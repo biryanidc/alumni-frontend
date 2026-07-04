@@ -7,7 +7,6 @@ export default function Board() {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Form States
   const [postType, setPostType] = useState('Referral');
   const [company, setCompany] = useState('');
   const [jobRole, setJobRole] = useState('');
@@ -15,18 +14,14 @@ export default function Board() {
   const [deadline, setDeadline] = useState('');
   const [link, setLink] = useState('');
 
-  // 1. READ: Fetch user role and all posts
   useEffect(() => {
     const initializeBoard = async () => {
-      // Get the current user's role from the database
       if (auth.currentUser) {
         const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role);
         }
       }
-
-      // Fetch posts
       const q = query(collection(db, "opportunities"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
       const fetchedPosts = [];
@@ -36,31 +31,23 @@ export default function Board() {
       setPosts(fetchedPosts);
       setLoading(false);
     };
-
     initializeBoard();
   }, []);
 
-  // 2. WRITE: Submit structured data (Alumni Only)
   const handlePost = async (e) => {
     e.preventDefault();
     if (userRole !== 'alumni') return;
 
     await addDoc(collection(db, "opportunities"), {
-      postType,
-      company,
-      jobRole,
+      postType, company, jobRole, 
       skills: skills.split(',').map(s => s.trim()), 
-      deadline,
-      link,
-      authorId: auth.currentUser.uid,
-      authorEmail: auth.currentUser.email,
+      deadline, link, 
+      authorId: auth.currentUser.uid, authorEmail: auth.currentUser.email, 
       timestamp: new Date()
     });
     
-    // Reset form
     setCompany(''); setJobRole(''); setSkills(''); setDeadline(''); setLink('');
     
-    // Refresh board
     const q = query(collection(db, "opportunities"), orderBy("timestamp", "desc"));
     const querySnapshot = await getDocs(q);
     const updatedPosts = [];
@@ -70,51 +57,98 @@ export default function Board() {
     setPosts(updatedPosts);
   };
 
-  if (loading) return <p style={{ textAlign: 'center' }}>Loading board...</p>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64 text-copper font-mono text-sm uppercase tracking-widest">
+      Retrieving Data Matrix...
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '700px', margin: '0 auto' }}>
-      <h2>Opportunity Board</h2>
+    <div className="max-w-6xl mx-auto font-sans text-copper mt-8">
       
-      {/* THE GATEKEEPER: Only render this form if the user is an Alumni */}
+      <div className="mb-10 border-b border-copper/20 pb-6">
+        <h2 className="text-4xl font-serif text-copperLight">Opportunity Board</h2>
+        <p className="font-mono text-xs uppercase tracking-widest opacity-60 mt-2">Campus Careers & Referrals</p>
+      </div>
+      
+      {/* The Gatekeeper Form */}
       {userRole === 'alumni' && (
-        <form onSubmit={handlePost} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px', padding: '15px', backgroundColor: '#f4f4f9', borderRadius: '8px' }}>
-          <h3>Post an Opportunity</h3>
-          <select value={postType} onChange={(e) => setPostType(e.target.value)} style={{ padding: '8px' }}>
-            <option value="Referral">Referral</option>
-            <option value="Internship">Internship</option>
-            <option value="Full-Time">Full-Time</option>
-          </select>
-          <input type="text" placeholder="Company Name" value={company} onChange={(e) => setCompany(e.target.value)} required style={{ padding: '8px' }}/>
-          <input type="text" placeholder="Job Role (e.g., SDE-1)" value={jobRole} onChange={(e) => setJobRole(e.target.value)} required style={{ padding: '8px' }}/>
-          <input type="text" placeholder="Required Skills (comma separated)" value={skills} onChange={(e) => setSkills(e.target.value)} required style={{ padding: '8px' }}/>
+        <form onSubmit={handlePost} className="bg-panel border border-copper/20 p-8 mb-10 shadow-2xl">
+          <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 border-b border-copper/10 pb-2">Inject Opportunity</h3>
           
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <label>Deadline: </label>
-            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required style={{ padding: '8px', flexGrow: 1 }}/>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <select value={postType} onChange={(e) => setPostType(e.target.value)} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper appearance-none font-mono text-sm">
+              <option value="Referral">Referral</option>
+              <option value="Internship">Internship</option>
+              <option value="Full-Time">Full-Time</option>
+            </select>
+            <input type="text" placeholder="Company Name (e.g. Google)" value={company} onChange={(e) => setCompany(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors"/>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <input type="text" placeholder="Job Role (e.g., SDE-1)" value={jobRole} onChange={(e) => setJobRole(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors"/>
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors font-mono"/>
+          </div>
+
+          <input type="text" placeholder="Required Skills (comma separated)" value={skills} onChange={(e) => setSkills(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-6"/>
+          <input type="url" placeholder="Application or Referral Link" value={link} onChange={(e) => setLink(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-8"/>
           
-          <input type="url" placeholder="Application/Referral Link" value={link} onChange={(e) => setLink(e.target.value)} required style={{ padding: '8px' }}/>
-          <button type="submit" style={{ padding: '10px', cursor: 'pointer', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '4px' }}>Post to Board</button>
+          <button type="submit" className="px-8 py-3 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
+            Transmit
+          </button>
         </form>
       )}
 
-      {/* READ: The Feed */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      {/* The Grid Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {posts.map(post => (
-          <div key={post.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
-              <h3 style={{ margin: 0 }}>{post.company} - {post.jobRole}</h3>
-              <span style={{ backgroundColor: '#e2e8f0', padding: '4px 8px', borderRadius: '12px', fontSize: '0.85em' }}>{post.postType}</span>
+          <div key={post.id} className="bg-panel border border-copper/20 p-8 shadow-lg flex flex-col justify-between hover:border-copper/40 transition-colors">
+            
+            <div>
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-2xl font-serif text-copperLight mb-1">{post.jobRole}</h3>
+                  <p className="font-mono text-sm opacity-80 uppercase tracking-widest">{post.company}</p>
+                </div>
+                <span className="bg-base border border-copper/30 px-3 py-1 text-xs font-mono uppercase tracking-widest text-copperLight">
+                  {post.postType}
+                </span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                {post.skills?.map((skill, idx) => (
+                  <span key={idx} className="bg-base border border-copper/10 text-copper px-3 py-1 text-xs font-mono uppercase">
+                    {skill}
+                  </span>
+                ))}
+              </div>
             </div>
-            <p><strong>Skills:</strong> {post.skills?.join(', ')}</p>
-            <p><strong>Deadline:</strong> {post.deadline}</p>
-            <p style={{ fontSize: '0.85em', color: '#666' }}>Posted by: {post.authorEmail}</p>
-            <a href={post.link} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '10px', padding: '8px 12px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>Apply / Request Referral</a>
+
+            <div className="border-t border-copper/10 pt-6 mt-4">
+              <div className="flex justify-between items-center font-mono text-xs opacity-60 mb-6 uppercase tracking-wider">
+                <span>By: {post.authorEmail}</span>
+                <span>Closes: {post.deadline}</span>
+              </div>
+              
+              <div className="flex gap-4">
+                <a href={post.link} target="_blank" rel="noreferrer" className="flex-1 text-center bg-copper text-base py-3 font-mono text-sm uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
+                  Apply
+                </a>
+                <button className="flex-1 text-center bg-base text-copper border border-copper/30 py-3 font-mono text-sm uppercase tracking-widest hover:bg-copper/10 transition-colors">
+                  Request
+                </button>
+              </div>
+            </div>
+
           </div>
         ))}
-        {posts.length === 0 && <p>No opportunities posted yet.</p>}
+        {posts.length === 0 && (
+          <div className="col-span-full text-center py-16 text-copper border border-dashed border-copper/30 font-mono text-sm uppercase tracking-widest opacity-60">
+            System empty. Awaiting injections.
+          </div>
+        )}
       </div>
+      
     </div>
   );
 }

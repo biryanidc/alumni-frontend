@@ -1,64 +1,90 @@
 import { useState, useEffect } from 'react';
 import { auth } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import Landing from './Landing';
 import Auth from './Auth';
 import Board from './Board';
-import AIAssistant from './AIAssistant';
 import Profile from './ProfilePage';
+import AIAssistant from './AIAssistant';
 import Search from './Search';
 import Admin from './Admin';
 
-function App() {
+export default function App() {
+  const [hasEntered, setHasEntered] = useState(false);
   const [user, setUser] = useState(null);
-  const [currentView, setCurrentView] = useState('board'); 
+  const [currentView, setCurrentView] = useState('board');
 
+  // Listen for Firebase login status
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); 
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      setUser(u);
     });
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  if (!user) return <Auth />;
+  // Gate 1: The Landing Page
+  if (!hasEntered) {
+    return <Landing onEnter={() => setHasEntered(true)} />;
+  }
 
-  const isAdmin = user?.email === 'admin@nitjsr.ac.in';
+  // Gate 2: Authentication
+  if (!user) {
+    return <Auth />;
+  }
 
+  // The Command Center: Dark Theme Layout
+  // The Command Center: Dark Theme Layout
   return (
-    <div>
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: '#1a1a1a', color: 'white', flexWrap: 'wrap', gap: '10px' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>AlumniConnect</h1>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={() => setCurrentView('board')} style={navButtonStyle(currentView === 'board')}>Opportunities</button>
-          <button onClick={() => setCurrentView('search')} style={navButtonStyle(currentView === 'search')}>Explore Alumni</button>
-          <button onClick={() => setCurrentView('ai')} style={navButtonStyle(currentView === 'ai')}>AI Assistant</button>
-          <button onClick={() => setCurrentView('profile')} style={navButtonStyle(currentView === 'profile')}>Profile</button>
-          
-          {isAdmin && (
-            <button onClick={() => setCurrentView('admin')} style={{...navButtonStyle(currentView === 'admin'), backgroundColor: '#ff9800'}}>Admin Panel</button>
-          )}
-          
-          <button onClick={() => signOut(auth)} style={{ ...navButtonStyle(false), backgroundColor: '#d9534f' }}>Log Out</button>
+    <div className="min-h-screen bg-base text-copper font-sans">
+      
+      {/* Top Navigation */}
+      <nav className="border-b border-copper/20 bg-panel p-4 px-8 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <div className="font-serif text-2xl text-copperLight tracking-wide">
+          Alumni<span className="opacity-50">Connect.</span>
+        </div>
+        
+        <div className="flex gap-6 font-mono text-xs uppercase tracking-widest font-bold">
+          <button 
+            onClick={() => setCurrentView('board')} 
+            className={`transition-colors ${currentView === 'board' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
+          >
+            Board
+          </button>
+          <button 
+            onClick={() => setCurrentView('search')} 
+            className={`transition-colors ${currentView === 'search' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
+          >
+            Directory
+          </button>
+          <button 
+            onClick={() => setCurrentView('ai')} 
+            className={`transition-colors ${currentView === 'ai' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
+          >
+            AI Network
+          </button>
+          <button 
+            onClick={() => setCurrentView('profile')} 
+            className={`transition-colors ${currentView === 'profile' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
+          >
+            Profile
+          </button>
+          <button 
+            onClick={() => auth.signOut()} 
+            className="text-red-900 hover:text-red-500 transition-colors ml-4"
+          >
+            Terminate
+          </button>
         </div>
       </nav>
-      
-      <main style={{ padding: '20px' }}>
+
+      {/* Main Module Engine */}
+      <main className="p-6">
         {currentView === 'board' && <Board />}
-        {currentView === 'search' && <Search />}
-        {currentView === 'ai' && <AIAssistant />}
         {currentView === 'profile' && <Profile />}
-        {currentView === 'admin' && isAdmin && <Admin />}
+        {currentView === 'ai' && <AIAssistant />}
+        {currentView === 'search' && <Search />}
+        {currentView === 'admin' && <Admin />}
       </main>
+      
     </div>
   );
 }
-
-const navButtonStyle = (isActive) => ({
-  padding: '8px 12px',
-  cursor: 'pointer',
-  backgroundColor: isActive ? '#4CAF50' : '#444',
-  color: 'white',
-  border: 'none',
-  borderRadius: '4px'
-});
-
-export default App;

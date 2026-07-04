@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Auth from './Auth';
 import Board from './Board';
 import AIAssistant from './AIAssistant';
-import Profile from './Profile';
+import Profile from './ProfilePage';
 import Search from './Search';
 import Admin from './Admin';
 

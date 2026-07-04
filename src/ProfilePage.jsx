@@ -3,6 +3,7 @@ import { db, auth } from './firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ProfilePage() {
+  // Updated state with skills and projects
   const [profile, setProfile] = useState({
     fullName: '',
     batchYear: '',
@@ -10,7 +11,9 @@ export default function ProfilePage() {
     company: '',
     role: '',
     linkedin: '',
-    bio: ''
+    bio: '',
+    skills: '',
+    projects: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,7 +41,6 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await setDoc(doc(db, 'users', auth.currentUser.uid), profile, { merge: true });
-      // Minor visual feedback instead of an ugly default alert
       console.log('Identity updated.'); 
     } catch (error) {
       console.error(error);
@@ -98,9 +100,21 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Bio</label>
-          <textarea name="bio" value={profile.bio || ''} onChange={handleChange} rows="4" className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors resize-none font-sans"></textarea>
+          <textarea name="bio" value={profile.bio || ''} onChange={handleChange} rows="3" className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors resize-none font-sans"></textarea>
+        </div>
+
+        <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 mt-10 border-b border-copper/10 pb-2">Technical Portfolio</h3>
+
+        <div className="mb-6">
+          <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Skills (Comma Separated)</label>
+          <input type="text" name="skills" value={profile.skills || ''} onChange={handleChange} placeholder="e.g., Python, React, C++" className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/30 outline-none focus:border-copper transition-colors"/>
+        </div>
+
+        <div className="mb-8">
+          <label className="block font-mono text-xs uppercase tracking-widest mb-2 opacity-80">Projects (Links or Descriptions)</label>
+          <textarea name="projects" value={profile.projects || ''} onChange={handleChange} rows="3" placeholder="List your key projects here..." className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/30 outline-none focus:border-copper transition-colors resize-none font-sans"></textarea>
         </div>
 
         <button type="submit" disabled={saving} className="px-8 py-3 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors disabled:opacity-50">

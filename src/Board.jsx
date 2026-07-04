@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
-import { collection, addDoc, getDocs, doc, getDoc, orderBy, query } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, orderBy, query,updateDoc, increment } from 'firebase/firestore';
 
 export default function Board() {
   const [posts, setPosts] = useState([]);
@@ -38,23 +38,36 @@ export default function Board() {
     e.preventDefault();
     if (userRole !== 'alumni') return;
 
-    await addDoc(collection(db, "opportunities"), {
-      postType, company, jobRole, 
-      skills: skills.split(',').map(s => s.trim()), 
-      deadline, link, 
-      authorId: auth.currentUser.uid, authorEmail: auth.currentUser.email, 
-      timestamp: new Date()
-    });
-    
-    setCompany(''); setJobRole(''); setSkills(''); setDeadline(''); setLink('');
-    
-    const q = query(collection(db, "opportunities"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    const updatedPosts = [];
-    querySnapshot.forEach((doc) => {
-      updatedPosts.push({ id: doc.id, ...doc.data() });
-    });
-    setPosts(updatedPosts);
+    try {
+      // 1. Save the opportunity to the board
+      await addDoc(collection(db, "opportunities"), {
+        postType, company, jobRole, 
+        skills: skills.split(',').map(s => s.trim()), 
+        deadline, link, 
+        authorId: auth.currentUser.uid, authorEmail: auth.currentUser.email, 
+        timestamp: new Date()
+      });
+      
+      // 2. Award 10 points to the Alumni's profile score
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(userRef, {
+        contributionScore: increment(10)
+      });
+
+      // 3. Clear the form
+      setCompany(''); setJobRole(''); setSkills(''); setDeadline(''); setLink('');
+      
+      // 4. Refresh the board
+      const q = query(collection(db, "opportunities"), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      const updatedPosts = [];
+      querySnapshot.forEach((doc) => {
+        updatedPosts.push({ id: doc.id, ...doc.data() });
+      });
+      setPosts(updatedPosts);
+    } catch (error) {
+      console.error("Transmission failed: ", error);
+    }
   };
 
   if (loading) return (

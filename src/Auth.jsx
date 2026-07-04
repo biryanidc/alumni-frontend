@@ -26,7 +26,20 @@ export default function Auth() {
         });
       }
     } catch (err) {
-      setError(err.message);
+      if (isLogin) {
+        if (err.code === 'auth/user-not-found') {
+          setError('Access Denied: Register with official college ID first.');
+        } else if (err.code === 'auth/wrong-password') {
+          setError('Access Denied: Incorrect password.');
+        } else if (err.code === 'auth/invalid-credential') {
+          // Fallback if Firebase ignores our request
+          setError('Access Denied: Invalid credentials or unregistered email.');
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError(err.message);
+      }
     }
   };
 

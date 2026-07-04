@@ -1,86 +1,149 @@
 import { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 export default function Admin() {
-  const [users, setUsers] = useState([]);
-  const [posts, setPosts] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    students: 0,
+    alumni: 0,
+    opportunities: 0,
+    totalPoints: 0,
+    placements: 0,
+    activeInterviews: 0
+  });
+  const [alumniList, setAlumniList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    // Fetch all users
-    const userSnap = await getDocs(collection(db, 'users'));
-    const userList = [];
-    userSnap.forEach(d => userList.push({ id: d.id, ...d.data() }));
-    setUsers(userList);
-
-    // Fetch all posts
-    const postSnap = await getDocs(collection(db, 'opportunities'));
-    const postList = [];
-    postSnap.forEach(d => postList.push({ id: d.id, ...d.data() }));
-    setPosts(postList);
-    
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchData();
+    const fetchAnalytics = async () => {
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        let studentCount = 0;
+        let alumniCount = 0;
+        let points = 0;
+        let fetchedAlumni = [];
+
+        usersSnap.forEach(document => {
+          const data = document.data();
+          if (data.role === 'student') studentCount++;
+          if (data.role === 'alumni') {
+            alumniCount++;
+            fetchedAlumni.push({ id: document.id, ...data });
+          }
+          if (data.contributionScore) points += data.contributionScore;
+        });
+
+        const oppsSnap = await getDocs(collection(db, 'opportunities'));
+
+        const refsSnap = await getDocs(collection(db, 'referrals'));
+        let offers = 0;
+        let interviews = 0;
+        refsSnap.forEach(document => {
+          const status = document.data().status;
+          if (status === 'Offered') offers++;
+          if (status === 'Interviewing') interviews++;
+        });
+        
+        setStats({ 
+          totalUsers: usersSnap.size, 
+          students: studentCount, 
+          alumni: alumniCount, 
+          opportunities: oppsSnap.size, 
+          totalPoints: points,
+          placements: offers,
+          activeInterviews: interviews
+        });
+        setAlumniList(fetchedAlumni);
+      } catch (error) {
+        console.error("Failed to compile analytics:", error);
+      }
+      setLoading(false);
+    };
+
+    fetchAnalytics();
   }, []);
 
-  const handleDeletePost = async (id) => {
-    await deleteDoc(doc(db, 'opportunities', id));
-    fetchData(); // Refresh table
+  const handleVerify = async (id) => {
+    try {
+      await updateDoc(doc(db, 'users', id), { isVerified: true });
+      setAlumniList(alumniList.map(alumnus => alumnus.id === id ? { ...alumnus, isVerified: true } : alumnus));
+    } catch (error) {
+      console.error("Verification failed.", error);
+    }
   };
 
-  if (loading) return <p>Loading Admin Dashboard...</p>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64 text-copper font-mono text-sm uppercase tracking-widest">
+      Compiling System Telemetry...
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <h2>Administrator Dashboard</h2>
+    <div className="max-w-6xl mx-auto font-sans text-copper mt-8">
       
-      <h3>Platform Activity: Users</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f4f4f4', textAlign: 'left' }}>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Email</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Role</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Grad Year</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{u.email}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd', textTransform: 'capitalize' }}>{u.role}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{u.gradYear || u.gradBatch}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="mb-10 border-b border-copper/20 pb-6">
+        <h2 className="text-4xl font-serif text-copperLight">System Analytics</h2>
+        <p className="font-mono text-xs uppercase tracking-widest opacity-60 mt-2">Platform Health & Engagement Telemetry</p>
+      </div>
 
-      <h3>Platform Activity: Opportunities</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f4f4f4', textAlign: 'left' }}>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Company</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Role</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Author</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map(p => (
-            <tr key={p.id}>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{p.company}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{p.jobRole}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{p.authorEmail}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                <button onClick={() => handleDeletePost(p.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="bg-panel border border-copper/20 p-8 shadow-lg">
+          <div className="font-mono text-xs uppercase tracking-widest opacity-60 mb-2">Total Nodes</div>
+          <div className="text-5xl font-serif text-copperLight mb-4">{stats.totalUsers}</div>
+          <div className="flex justify-between border-t border-copper/10 pt-4 font-mono text-xs">
+            <span>Students: <span className="text-copperLight">{stats.students}</span></span>
+            <span>Alumni: <span className="text-copperLight">{stats.alumni}</span></span>
+          </div>
+        </div>
+        <div className="bg-panel border border-copper/20 p-8 shadow-lg">
+          <div className="font-mono text-xs uppercase tracking-widest opacity-60 mb-2">Active Opportunities</div>
+          <div className="text-5xl font-serif text-copperLight mb-4">{stats.opportunities}</div>
+          <div className="border-t border-copper/10 pt-4 font-mono text-xs opacity-60">Jobs, Internships & Referrals</div>
+        </div>
+        <div className="bg-panel border border-copper/20 p-8 shadow-lg">
+          <div className="font-mono text-xs uppercase tracking-widest opacity-60 mb-2">Network Engagement</div>
+          <div className="text-5xl font-serif text-copperLight mb-4">{stats.totalPoints}</div>
+          <div className="border-t border-copper/10 pt-4 font-mono text-xs opacity-60">Total Impact Points</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="bg-panel border border-green-500/30 p-8 shadow-lg">
+          <div className="font-mono text-xs uppercase tracking-widest text-green-500 opacity-80 mb-2">Confirmed Placements</div>
+          <div className="text-5xl font-serif text-green-400 mb-4">{stats.placements}</div>
+          <div className="border-t border-green-500/20 pt-4 font-mono text-xs text-green-500 opacity-60">Offers secured via network</div>
+        </div>
+        
+        <div className="bg-panel border border-yellow-500/30 p-8 shadow-lg">
+          <div className="font-mono text-xs uppercase tracking-widest text-yellow-500 opacity-80 mb-2">Active Pipeline</div>
+          <div className="text-5xl font-serif text-yellow-400 mb-4">{stats.activeInterviews}</div>
+          <div className="border-t border-yellow-500/20 pt-4 font-mono text-xs text-yellow-500 opacity-60">Students currently interviewing</div>
+        </div>
+      </div>
+
+      <div className="bg-panel border border-copper/20 p-8 shadow-xl">
+         <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 border-b border-copper/10 pb-2">Alumni Verification Queue</h3>
+         <div className="space-y-4 font-mono text-sm">
+            {alumniList.map(alumnus => (
+              <div key={alumnus.id} className="flex justify-between items-center p-4 bg-base border border-copper/10">
+                <div>
+                  <span className="font-bold text-copperLight text-base">{alumnus.fullName || alumnus.email}</span>
+                  <span className="opacity-60 ml-4">{alumnus.company ? `${alumnus.role} at ${alumnus.company}` : 'No details'}</span>
+                </div>
+                {alumnus.isVerified ? (
+                  <span className="text-green-500 uppercase tracking-widest text-xs font-bold">Verified ✓</span>
+                ) : (
+                  <button onClick={() => handleVerify(alumnus.id)} className="px-4 py-2 bg-copper/10 hover:bg-copper hover:text-base border border-copper/30 transition-colors uppercase tracking-widest text-xs">
+                    Verify Node
+                  </button>
+                )}
+              </div>
+            ))}
+            {alumniList.length === 0 && <div className="opacity-60 uppercase tracking-widest text-xs">No alumni records found.</div>}
+         </div>
+      </div>
+
     </div>
   );
 }

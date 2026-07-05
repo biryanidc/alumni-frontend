@@ -147,9 +147,7 @@ export default function Board() {
                 <a href={post.link} target="_blank" rel="noreferrer" className="flex-1 text-center bg-copper text-base py-3 font-mono text-sm uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
                   Apply
                 </a>
-                <button className="flex-1 text-center bg-base text-copper border border-copper/30 py-3 font-mono text-sm uppercase tracking-widest hover:bg-copper/10 transition-colors">
-                  Request
-                </button>
+               
               </div>
             </div>
 

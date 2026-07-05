@@ -1,16 +1,69 @@
-# React + Vite
+\# AlumniConnect
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+A closed-loop professional network for NIT Jamshedpur. Built to bridge the gap between students and verified alumni, facilitating job referrals and tracking real placement outcomes.
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+\## System Architecture
+
+\* \*\*Frontend Engine:\*\* React, Vite, Tailwind CSS
+
+\* \*\*Backend \& Database:\*\* Firebase Authentication, Cloud Firestore
+
+\* \*\*Deployment:\*\* Vercel
+
+
+
+\## Core Features
+
+
+
+\### For Students
+
+\* \*\*Opportunity Board:\*\* Access a live feed of jobs and internships posted exclusively by alumni.
+
+\* \*\*Alumni Directory:\*\* Search for graduates by company and role. Authentic accounts are marked with a verification shield.
+
+\* \*\*Referral Network:\*\* Request direct job referrals from verified alumni.
+
+\* \*\*Pipeline Tracking:\*\* Update application statuses (Pending → Interviewing → Offered) to feed the central platform metrics.
+
+
+
+\### For Alumni
+
+\* \*\*Post Opportunities:\*\* Share exclusive job openings directly with the NIT Jamshedpur student network.
+
+\* \*\*Manage Referrals:\*\* Accept or reject incoming student referral requests via a dedicated dashboard.
+
+\* \*\*Gamified Engagement:\*\* Earn contribution points for posting opportunities and expanding the network.
+
+
+
+\### For Administrators (Telemetry)
+
+\* \*\*Node Verification:\*\* Approve and verify alumni accounts to prevent impersonation and fraud.
+
+\* \*\*Network Analytics:\*\* Monitor platform health, including total active nodes, opportunities, and overall system engagement.
+
+\* \*\*Placement Funnel:\*\* Track the exact number of active student interviews and secured job offers in real time.
+
+
+
+\## Local Execution
+
+
+
+To run this system on a local machine, execute the following commands in your terminal:
+
+
+
+1\. Install dependencies:
+
+&#x20;  ```bash
+
+&#x20;  npm install
+

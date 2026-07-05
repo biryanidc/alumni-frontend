@@ -17,21 +17,18 @@ export default function App() {
   const [userRole, setUserRole] = useState(null);
   const [currentView, setCurrentView] = useState('board');
 
- useEffect(() => {
+  useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (u) => {
       setUser(u);
       if (u) {
-        // Fetch identity to determine clearance level
         const docRef = doc(db, 'users', u.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setUserRole(docSnap.data().role);
         }
-        // Force routing back to the Board on login
         setCurrentView('board');
       } else {
         setUserRole(null);
-        // Force routing back to the Board on logout
         setCurrentView('board');
       }
     });
@@ -49,12 +46,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-base text-copper font-sans">
       
-      <nav className="border-b border-copper/20 bg-panel p-4 px-8 flex justify-between items-center sticky top-0 z-50 shadow-md">
+      <nav className="border-b border-copper/20 bg-panel p-4 md:px-8 flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 shadow-md gap-4 md:gap-0">
         <div className="font-serif text-2xl text-copperLight tracking-wide">
           Alumni<span className="opacity-50">Connect.</span>
         </div>
         
-        <div className="flex gap-6 font-mono text-xs uppercase tracking-widest font-bold">
+        <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 font-mono text-[10px] md:text-xs uppercase tracking-widest font-bold">
           <button 
             onClick={() => setCurrentView('board')} 
             className={`transition-colors ${currentView === 'board' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
@@ -80,7 +77,7 @@ export default function App() {
             AI Network
           </button>
           
-          {/* SECURITY GATE: Only render button for Admins */}
+          {/* SECURITY GATE */}
           {userRole === 'admin' && (
             <button 
               onClick={() => setCurrentView('admin')} 
@@ -90,11 +87,11 @@ export default function App() {
             </button>
           )}
           <button 
-  onClick={() => setCurrentView('referrals')} 
-  className={`transition-colors ${currentView === 'referrals' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
->
-  Referrals
-</button>
+            onClick={() => setCurrentView('referrals')} 
+            className={`transition-colors ${currentView === 'referrals' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
+          >
+            Referrals
+          </button>
           <button 
             onClick={() => setCurrentView('profile')} 
             className={`transition-colors ${currentView === 'profile' ? 'text-copperLight' : 'opacity-50 hover:opacity-100'}`}
@@ -103,22 +100,22 @@ export default function App() {
           </button>
           <button 
             onClick={() => auth.signOut()} 
-            className="text-red-900 hover:text-red-500 transition-colors ml-4"
+            className="text-red-900 hover:text-red-500 transition-colors md:ml-4"
           >
             Terminate
           </button>
         </div>
       </nav>
 
-      <main className="p-6">
-  {currentView === 'board' && <Board />}
-  {currentView === 'search' && <Search userRole={userRole} />}
-  {currentView === 'referrals' && <Referrals userRole={userRole} />}
-  {currentView === 'leaderboard' && <Leaderboard />}
-  {currentView === 'ai' && <AIAssistant />}
-  {currentView === 'admin' && userRole === 'admin' && <Admin />}
-  {currentView === 'profile' && <Profile />}
-</main>
+      <main className="p-4 md:p-6">
+        {currentView === 'board' && <Board />}
+        {currentView === 'search' && <Search userRole={userRole} />}
+        {currentView === 'referrals' && <Referrals userRole={userRole} />}
+        {currentView === 'leaderboard' && <Leaderboard />}
+        {currentView === 'ai' && <AIAssistant />}
+        {currentView === 'admin' && userRole === 'admin' && <Admin />}
+        {currentView === 'profile' && <Profile />}
+      </main>
       
     </div>
   );

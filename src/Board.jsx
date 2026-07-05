@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
-import { collection, addDoc, getDocs, doc, getDoc, orderBy, query,updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, orderBy, query, updateDoc, increment } from 'firebase/firestore';
 
 export default function Board() {
   const [posts, setPosts] = useState([]);
@@ -39,7 +39,6 @@ export default function Board() {
     if (userRole !== 'alumni') return;
 
     try {
-      // 1. Save the opportunity to the board
       await addDoc(collection(db, "opportunities"), {
         postType, company, jobRole, 
         skills: skills.split(',').map(s => s.trim()), 
@@ -48,16 +47,13 @@ export default function Board() {
         timestamp: new Date()
       });
       
-      // 2. Award 10 points to the Alumni's profile score
       const userRef = doc(db, 'users', auth.currentUser.uid);
       await updateDoc(userRef, {
         contributionScore: increment(10)
       });
 
-      // 3. Clear the form
       setCompany(''); setJobRole(''); setSkills(''); setDeadline(''); setLink('');
       
-      // 4. Refresh the board
       const q = query(collection(db, "opportunities"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
       const updatedPosts = [];
@@ -77,19 +73,19 @@ export default function Board() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto font-sans text-copper mt-8">
+    <div className="max-w-6xl mx-auto font-sans text-copper mt-4 md:mt-8 px-4 md:px-0">
       
-      <div className="mb-10 border-b border-copper/20 pb-6">
-        <h2 className="text-4xl font-serif text-copperLight">Opportunity Board</h2>
-        <p className="font-mono text-xs uppercase tracking-widest opacity-60 mt-2">Campus Careers & Referrals</p>
+      <div className="mb-8 md:mb-10 border-b border-copper/20 pb-4 md:pb-6">
+        <h2 className="text-3xl md:text-4xl font-serif text-copperLight">Opportunity Board</h2>
+        <p className="font-mono text-[10px] md:text-xs uppercase tracking-widest opacity-60 mt-2">Campus Careers & Referrals</p>
       </div>
       
       {/* The Gatekeeper Form */}
       {userRole === 'alumni' && (
-        <form onSubmit={handlePost} className="bg-panel border border-copper/20 p-8 mb-10 shadow-2xl">
+        <form onSubmit={handlePost} className="bg-panel border border-copper/20 p-6 md:p-8 mb-10 shadow-2xl">
           <h3 className="font-mono text-sm uppercase tracking-widest text-copperLight mb-6 border-b border-copper/10 pb-2">Inject Opportunity</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
             <select value={postType} onChange={(e) => setPostType(e.target.value)} className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper appearance-none font-mono text-sm">
               <option value="Referral">Referral</option>
               <option value="Internship">Internship</option>
@@ -98,15 +94,15 @@ export default function Board() {
             <input type="text" placeholder="Company Name (e.g. Google)" value={company} onChange={(e) => setCompany(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors"/>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
             <input type="text" placeholder="Job Role (e.g., SDE-1)" value={jobRole} onChange={(e) => setJobRole(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors"/>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper outline-none focus:border-copper transition-colors font-mono"/>
           </div>
 
-          <input type="text" placeholder="Required Skills (comma separated)" value={skills} onChange={(e) => setSkills(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-6"/>
-          <input type="url" placeholder="Application or Referral Link" value={link} onChange={(e) => setLink(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-8"/>
+          <input type="text" placeholder="Required Skills (comma separated)" value={skills} onChange={(e) => setSkills(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-4 md:mb-6"/>
+          <input type="url" placeholder="Application or Referral Link" value={link} onChange={(e) => setLink(e.target.value)} required className="w-full bg-base border border-copper/30 p-3 text-copper placeholder-copper/40 outline-none focus:border-copper transition-colors mb-6 md:mb-8"/>
           
-          <button type="submit" className="px-8 py-3 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
+          <button type="submit" className="w-full md:w-auto px-8 py-3 bg-copper text-base font-mono uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
             Transmit
           </button>
         </form>
@@ -115,39 +111,38 @@ export default function Board() {
       {/* The Grid Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {posts.map(post => (
-          <div key={post.id} className="bg-panel border border-copper/20 p-8 shadow-lg flex flex-col justify-between hover:border-copper/40 transition-colors">
+          <div key={post.id} className="bg-panel border border-copper/20 p-6 md:p-8 shadow-lg flex flex-col justify-between hover:border-copper/40 transition-colors">
             
             <div>
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex flex-col md:flex-row justify-between items-start mb-4 md:mb-6 gap-2 md:gap-0">
                 <div>
-                  <h3 className="text-2xl font-serif text-copperLight mb-1">{post.jobRole}</h3>
-                  <p className="font-mono text-sm opacity-80 uppercase tracking-widest">{post.company}</p>
+                  <h3 className="text-xl md:text-2xl font-serif text-copperLight mb-1">{post.jobRole}</h3>
+                  <p className="font-mono text-[10px] md:text-sm opacity-80 uppercase tracking-widest">{post.company}</p>
                 </div>
-                <span className="bg-base border border-copper/30 px-3 py-1 text-xs font-mono uppercase tracking-widest text-copperLight">
+                <span className="bg-base border border-copper/30 px-3 py-1 text-[10px] md:text-xs font-mono uppercase tracking-widest text-copperLight">
                   {post.postType}
                 </span>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-6">
                 {post.skills?.map((skill, idx) => (
-                  <span key={idx} className="bg-base border border-copper/10 text-copper px-3 py-1 text-xs font-mono uppercase">
+                  <span key={idx} className="bg-base border border-copper/10 text-copper px-3 py-1 text-[10px] md:text-xs font-mono uppercase">
                     {skill}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-copper/10 pt-6 mt-4">
-              <div className="flex justify-between items-center font-mono text-xs opacity-60 mb-6 uppercase tracking-wider">
+            <div className="border-t border-copper/10 pt-4 md:pt-6 mt-2 md:mt-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center font-mono text-[10px] md:text-xs opacity-60 mb-4 md:mb-6 uppercase tracking-wider gap-2 md:gap-0">
                 <span>By: {post.authorEmail}</span>
                 <span>Closes: {post.deadline}</span>
               </div>
               
               <div className="flex gap-4">
-                <a href={post.link} target="_blank" rel="noreferrer" className="flex-1 text-center bg-copper text-base py-3 font-mono text-sm uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
+                <a href={post.link} target="_blank" rel="noreferrer" className="w-full text-center bg-copper text-base py-3 font-mono text-sm uppercase tracking-widest font-bold hover:bg-copperLight transition-colors">
                   Apply
                 </a>
-               
               </div>
             </div>
 

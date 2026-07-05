@@ -1,69 +1,100 @@
-\# AlumniConnect
+# 🎓 AlumniConnect
 
+> A closed-loop professional network for **NIT Jamshedpur**.
 
+Built to bridge the gap between students and verified alumni, facilitating job referrals and tracking real placement outcomes.
 
-A closed-loop professional network for NIT Jamshedpur. Built to bridge the gap between students and verified alumni, facilitating job referrals and tracking real placement outcomes.
+---
 
+## 🏗️ System Architecture
 
+| Component | Technology |
+|-----------|------------|
+| **Frontend Engine** | React, Vite, Tailwind CSS |
+| **Backend & Database** | Firebase Authentication, Cloud Firestore |
+| **Deployment** | Vercel |
 
+---
 
-\## System Architecture
+# ✨ Core Features
 
-\* \*\*Frontend Engine:\*\* React, Vite, Tailwind CSS
+## 👨‍🎓 For Students
 
-\* \*\*Backend \& Database:\*\* Firebase Authentication, Cloud Firestore
+### 📌 Opportunity Board
+Access a live feed of jobs and internships posted exclusively by alumni.
 
-\* \*\*Deployment:\*\* Vercel
+### 🔍 Alumni Directory
+Search for graduates by company and role. Authentic accounts are marked with a verification shield.
 
+### 🤝 Referral Network
+Request direct job referrals from verified alumni.
 
+### 📊 Pipeline Tracking
+Update application statuses:
 
-\## Core Features
+```
+Pending → Interviewing → Offered
+```
 
+These updates feed the central platform metrics.
 
+---
 
-\### For Students
+## 👨‍💼 For Alumni
 
-\* \*\*Opportunity Board:\*\* Access a live feed of jobs and internships posted exclusively by alumni.
+### 📢 Post Opportunities
+Share exclusive job openings directly with the NIT Jamshedpur student network.
 
-\* \*\*Alumni Directory:\*\* Search for graduates by company and role. Authentic accounts are marked with a verification shield.
+### 📨 Manage Referrals
+Accept or reject incoming student referral requests via a dedicated dashboard.
 
-\* \*\*Referral Network:\*\* Request direct job referrals from verified alumni.
+### 🏆 Gamified Engagement
+Earn contribution points for posting opportunities and expanding the network.
 
-\* \*\*Pipeline Tracking:\*\* Update application statuses (Pending → Interviewing → Offered) to feed the central platform metrics.
+---
 
+## 🛠️ For Administrators (Telemetry)
 
+### ✅ Node Verification
+Approve and verify alumni accounts to prevent impersonation and fraud.
 
-\### For Alumni
+### 📈 Network Analytics
+Monitor platform health, including:
 
-\* \*\*Post Opportunities:\*\* Share exclusive job openings directly with the NIT Jamshedpur student network.
+- Total active nodes
+- Available opportunities
+- Overall system engagement
 
-\* \*\*Manage Referrals:\*\* Accept or reject incoming student referral requests via a dedicated dashboard.
+### 📉 Placement Funnel
+Track the exact number of active student interviews and secured job offers in real time.
 
-\* \*\*Gamified Engagement:\*\* Earn contribution points for posting opportunities and expanding the network.
+---
 
+# 🚀 Local Execution
 
+To run this system on your local machine:
 
-\### For Administrators (Telemetry)
+### 1. Install dependencies
 
-\* \*\*Node Verification:\*\* Approve and verify alumni accounts to prevent impersonation and fraud.
+```bash
+npm install
+```
 
-\* \*\*Network Analytics:\*\* Monitor platform health, including total active nodes, opportunities, and overall system engagement.
+### 2. Start the development server
 
-\* \*\*Placement Funnel:\*\* Track the exact number of active student interviews and secured job offers in real time.
+```bash
+npm run dev
+```
 
+---
 
+## 📌 Tech Stack
 
-\## Local Execution
+- ⚛️ React
+- ⚡ Vite
+- 🎨 Tailwind CSS
+- 🔥 Firebase Authentication
+- ☁️ Cloud Firestore
+- ▲ Vercel
 
-
-
-To run this system on a local machine, execute the following commands in your terminal:
-
-
-
-1\. Install dependencies:
-
-&#x20;  ```bash
-
-&#x20;  npm install
-
+---
